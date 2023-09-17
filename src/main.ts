@@ -15,7 +15,7 @@ async function bootstrap() {
   });
 
   const configService = app.select(AppModule).get(ConfigService);
-  console.log('process.env.NODE_ENV: ', process.env.NODE_ENV);
+
   app.enableCors({
     origin: [
       configService.get('CLIENT_URL'),
