@@ -19,8 +19,7 @@ async function bootstrap() {
   app.enableCors({
     origin: [
       configService.get('CLIENT_URL'),
-      configService.get('CLIENT_LOCAL_URL1'),
-      configService.get('CLIENT_LOCAL_URL2'),
+      configService.get('CLIENT_LOCAL_URL'),
     ],
     credentials: true,
   });
