@@ -1,7 +1,8 @@
 import { Global, Module } from '@nestjs/common';
 import { HttpModule } from '@nestjs/axios';
+import { PrismaService } from './services/prisma.service';
 
-const providers = [];
+const providers = [PrismaService];
 
 @Global()
 @Module({
