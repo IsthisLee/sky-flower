@@ -29,7 +29,7 @@ interface RequestDataParams {
 export class RequestService {
   constructor(private httpService: HttpService) {}
 
-  requestData = ({
+  requestData({
     method,
     url,
     config = {},
@@ -37,7 +37,7 @@ export class RequestService {
       'Content-Type': 'application/json',
       Accept: 'application/json',
     },
-  }: RequestDataParams) => {
+  }: RequestDataParams) {
     const response$ = this.httpService
       .request({
         method,
@@ -48,5 +48,5 @@ export class RequestService {
       .pipe(map((res) => res.data));
 
     return lastValueFrom(response$);
-  };
+  }
 }

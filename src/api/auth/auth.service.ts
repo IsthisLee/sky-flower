@@ -190,7 +190,8 @@ export class AuthService {
   setRefreshToken(res: Response, refreshToken: string) {
     res.cookie('refreshToken', refreshToken, {
       domain:
-        this.configService.get('NODE_ENV') === 'development'
+        this.configService.get('NODE_ENV') === 'development' ||
+        this.configService.get('NODE_ENV') === 'local'
           ? 'localhost'
           : this.configService.get('COMMON_COOKIE_DOMAIN'),
       httpOnly: true,
