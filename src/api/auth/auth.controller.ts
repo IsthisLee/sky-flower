@@ -7,6 +7,7 @@ import {
   UseGuards,
   Get,
   Body,
+  UploadedFile,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -18,6 +19,7 @@ import {
   ApiUnprocessableEntityResponse,
   getSchemaPath,
   ApiExtraModels,
+  ApiPayloadTooLargeResponse,
 } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { Provider } from '@prisma/client';
@@ -29,6 +31,7 @@ import { JwtPayloadInfo, GetUserInfo } from 'src/common/interface';
 import { UsersService } from '../users/users.service';
 import { SignupDto } from './dtos/signup.dto';
 import { UserEntryResponseDto } from '../users/dtos/user-entry-response.dto';
+import { ApiFile } from 'src/common/decorators/swagger.schema';
 
 @Controller('auth')
 @ApiTags('Auth')
@@ -172,6 +175,7 @@ export class AuthController {
     description: `
     회원가입 완료 시 jwt token을 발급합니다.`,
   })
+  @ApiFile({ name: 'profileImage' })
   @ApiResponse({
     status: 201,
     description: '회원가입 성공',
@@ -211,12 +215,40 @@ export class AuthController {
               type: 'number',
               example: 400,
             },
-            error: {
+            message: {
+              type: 'string',
+            },
+            detail: {
               type: 'string',
               example: 'Bad Request',
             },
+          },
+        },
+      },
+    },
+  })
+  @ApiPayloadTooLargeResponse({
+    description: '프로필 이미지 용량이 너무 큰 경우 (500MB 이상)',
+    content: {
+      'application/json': {
+        schema: {
+          type: 'object',
+          properties: {
+            success: {
+              type: 'boolean',
+              example: false,
+            },
+            statusCode: {
+              type: 'number',
+              example: 413,
+            },
             message: {
               type: 'string',
+              example: 'File too large',
+            },
+            detail: {
+              type: 'string',
+              example: 'PayloadTooLargeException',
             },
           },
         },
@@ -226,7 +258,9 @@ export class AuthController {
   async signup(
     @Res({ passthrough: true }) res: Response,
     @Body() signupDto: SignupDto,
+    @UploadedFile() file: Express.Multer.File,
   ) {
+    console.log('file: ', file);
     const { accessToken, refreshToken } = await this.authService.signup(
       signupDto,
     );
