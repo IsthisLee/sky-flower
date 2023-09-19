@@ -16,6 +16,8 @@ import {
   ApiBearerAuth,
   ApiBadRequestResponse,
   ApiUnprocessableEntityResponse,
+  getSchemaPath,
+  ApiExtraModels,
 } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { Provider } from '@prisma/client';
@@ -26,6 +28,7 @@ import { JwtUserPayload } from 'src/common/decorators/jwt-user.decorator';
 import { JwtPayloadInfo, GetUserInfo } from 'src/common/interface';
 import { UsersService } from '../users/users.service';
 import { SignupDto } from './dtos/signup.dto';
+import { UserEntryResponseDto } from '../users/dtos/user-entry-response.dto';
 
 @Controller('auth')
 @ApiTags('Auth')
@@ -103,12 +106,12 @@ export class AuthController {
               type: 'number',
               example: 400,
             },
-            error: {
-              type: 'string',
-              example: 'Bad Request',
-            },
             message: {
               type: 'string',
+            },
+            detail: {
+              type: 'string',
+              example: 'Bad Request',
             },
           },
         },
@@ -116,7 +119,7 @@ export class AuthController {
     },
   })
   @ApiUnprocessableEntityResponse({
-    description: '카카오 code가 유효하지 않을 경우',
+    description: '카카오 인증 code가 유효하지 않을 경우',
     content: {
       'application/json': {
         schema: {
@@ -130,13 +133,13 @@ export class AuthController {
               type: 'number',
               example: 422,
             },
-            error: {
-              type: 'string',
-              example: 'Unprocessable Entity',
-            },
             message: {
               type: 'string',
               example: '카카오 code가 유효하지 않습니다.',
+            },
+            detail: {
+              type: 'string',
+              example: 'Unprocessable Entity',
             },
           },
         },
@@ -240,6 +243,7 @@ export class AuthController {
     로그인 상태인 경우 내 정보를 조회합니다.
     로그인 상태가 아닌 경우 401 에러가 발생합니다.`,
   })
+  @ApiExtraModels(UserEntryResponseDto)
   @ApiResponse({
     status: 200,
     description: '내 정보 조회 성공',
@@ -252,18 +256,7 @@ export class AuthController {
               type: 'boolean',
             },
             data: {
-              type: 'object',
-              properties: {
-                userId: {
-                  type: 'number',
-                },
-                nickname: {
-                  type: 'string',
-                },
-                profileImageUrl: {
-                  type: 'string',
-                },
-              },
+              $ref: getSchemaPath(UserEntryResponseDto),
             },
           },
         },

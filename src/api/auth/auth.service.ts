@@ -99,7 +99,7 @@ export class AuthService {
     } catch (error) {
       if (error.response.data.error_code === 'KOE320') {
         throw new UnprocessableEntityException(
-          '카카오 code가 유효하지 않습니다.',
+          '카카오 인증 code가 유효하지 않습니다.',
         );
       }
       throw error;
