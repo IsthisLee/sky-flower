@@ -5,6 +5,8 @@ import { HealthCheckerModule } from './api/health-checker/health-checker.module'
 import { LoggerMiddleware } from './common/middlewares/logger.middleware';
 import { AuthModule } from './api/auth/auth.module';
 import { UsersModule } from './api/users/users.module';
+import { APP_FILTER } from '@nestjs/core';
+import { HttpExceptionFilter } from './common/exceptions/http-exception.filter';
 
 @Module({
   imports: [
@@ -18,6 +20,12 @@ import { UsersModule } from './api/users/users.module';
     UsersModule,
     SharedModule,
     HealthCheckerModule,
+  ],
+  providers: [
+    {
+      provide: APP_FILTER,
+      useClass: HttpExceptionFilter,
+    },
   ],
 })
 export class AppModule implements NestModule {
