@@ -6,8 +6,10 @@ import {
 } from '@nestjs/terminus';
 
 import { DatabaseHealthIndicator } from './health-indicators/database.indicator';
+import { ApiTags } from '@nestjs/swagger';
 
 @Controller('health')
+@ApiTags('Health - 서버 상태 확인')
 export class HealthCheckerController {
   constructor(
     private healthCheckService: HealthCheckService,

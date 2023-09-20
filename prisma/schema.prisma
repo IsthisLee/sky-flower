@@ -13,7 +13,7 @@ model User {
   profileImageId Int?        @unique @map("profile_image_id")
   createdAt      DateTime    @default(now()) @map("created_at") @db.Timestamp(0)
   deletedAt      DateTime?   @map("deleted_at") @db.Timestamp(0)
-  updatedAt      DateTime    @default(now()) @map("updated_at") @db.Timestamp(0)
+  updatedAt      DateTime    @updatedAt @map("updated_at") @db.Timestamp(0)
   files          File[]      @relation("UserToFiles")
   posts          Post[]
   postLikes      PostLike[]
@@ -27,7 +27,7 @@ model UserOauth {
   oauthId   String    @map("oauth_id") @db.VarChar(255)
   provider  Provider
   createdAt DateTime  @default(now()) @map("created_at") @db.Timestamp(0)
-  updatedAt DateTime  @default(now()) @map("updated_at") @db.Timestamp(0)
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamp(0)
   deletedAt DateTime? @map("deleted_at") @db.Timestamp(0)
   user      User      @relation(fields: [userId], references: [id])
 
@@ -42,7 +42,7 @@ model File {
   fileType         FileType   @map("file_type")
   fileExtension    String     @map("file_extension")
   createdAt        DateTime   @default(now()) @map("created_at") @db.Timestamp(0)
-  updatedAt        DateTime   @default(now()) @map("updated_at") @db.Timestamp(0)
+  updatedAt        DateTime   @updatedAt @map("updated_at") @db.Timestamp(0)
   deletedAt        DateTime?  @map("deleted_at") @db.Timestamp(0)
   user             User       @relation("UserToFiles", fields: [userId], references: [id])
   postFiles        PostFile[]
@@ -61,7 +61,7 @@ model Post {
   district  String?
   viewCount Int        @map("view_count")
   createdAt DateTime   @default(now()) @map("created_at") @db.Timestamp(0)
-  updatedAt DateTime   @default(now()) @map("updated_at") @db.Timestamp(0)
+  updatedAt DateTime   @updatedAt @map("updated_at") @db.Timestamp(0)
   deletedAt DateTime?  @map("deleted_at") @db.Timestamp(0)
   user      User       @relation(fields: [userId], references: [id])
   postFiles PostFile[]
@@ -84,7 +84,7 @@ model PostLike {
   userId    Int       @map("user_id")
   postId    Int       @map("post_id")
   createdAt DateTime  @default(now()) @map("created_at") @db.Timestamp(0)
-  updatedAt DateTime  @default(now()) @map("updated_at") @db.Timestamp(0)
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamp(0)
   deletedAt DateTime? @map("deleted_at") @db.Timestamp(0)
   post      Post      @relation(fields: [postId], references: [id])
   user      User      @relation(fields: [userId], references: [id])

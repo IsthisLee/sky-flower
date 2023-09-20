@@ -27,7 +27,6 @@ export class HttpExceptionFilter implements ExceptionFilter {
 
     const err: Err = (exception as HttpException).getResponse();
     const statusCode = (exception as HttpException).getStatus();
-    console.log(err);
     const resObject: FailResponse = {
       success: false,
       statusCode,

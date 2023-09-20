@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, PickType } from '@nestjs/swagger';
 
 export class UserEntryResponseDto {
   @ApiProperty({
@@ -20,3 +20,8 @@ export class UserEntryResponseDto {
   })
   profileImageUrl?: string;
 }
+
+export class UpdatedUserEntryResponseDto extends PickType(
+  UserEntryResponseDto,
+  ['userId', 'nickname'],
+) {}

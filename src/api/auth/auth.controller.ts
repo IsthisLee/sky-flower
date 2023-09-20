@@ -36,7 +36,7 @@ import { ApiFile } from 'src/common/decorators/swagger.schema';
 import { CheckNicknameDto } from './dtos/check-nickname.dto';
 
 @Controller('auth')
-@ApiTags('Auth')
+@ApiTags('Auth - 인증')
 export class AuthController {
   constructor(
     private readonly authService: AuthService,

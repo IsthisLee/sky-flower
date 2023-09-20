@@ -1,7 +1,12 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { Provider, User } from '@prisma/client';
 import { CreateUserInfo } from '../../common/interface';
 import { PrismaService } from 'src/shared/services/prisma.service';
+import { UserUpdateDto } from './dtos/user-update.dto';
 
 @Injectable()
 export class UsersService {
@@ -58,5 +63,24 @@ export class UsersService {
     });
 
     return !user;
+  }
+
+  async updateProfile(userId: number, updateProfileDto: UserUpdateDto) {
+    const { nickname } = updateProfileDto;
+
+    const user = await this.prismaService.user.findUnique({
+      where: { id: userId, deletedAt: null },
+    });
+
+    if (!user) {
+      throw new NotFoundException('회원 정보를 찾을 수 없습니다.');
+    }
+
+    const updatedUser = await this.prismaService.user.update({
+      where: { id: userId },
+      data: { nickname },
+    });
+
+    return updatedUser;
   }
 }
