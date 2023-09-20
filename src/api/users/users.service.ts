@@ -51,4 +51,12 @@ export class UsersService {
 
     return newUserResult;
   }
+
+  async checkAvailableNickname(nickname: string): Promise<boolean> {
+    const user = await this.prismaService.user.findFirst({
+      where: { nickname, deletedAt: null },
+    });
+
+    return !user;
+  }
 }

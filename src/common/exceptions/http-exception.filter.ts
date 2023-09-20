@@ -7,16 +7,9 @@ import {
   Logger,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
-import dayjs from 'dayjs';
 import { FailResponse } from '../interface';
 
-interface Log {
-  timestamp: string;
-  method: string;
-  url: string;
-  res: FailResponse;
-}
-type Err = string | { message?: string; error?: string };
+type Err = string | { message?: string | string[]; error?: string };
 
 @Catch()
 export class HttpExceptionFilter implements ExceptionFilter {
@@ -34,13 +27,16 @@ export class HttpExceptionFilter implements ExceptionFilter {
 
     const err: Err = (exception as HttpException).getResponse();
     const statusCode = (exception as HttpException).getStatus();
+    console.log(err);
     const resObject: FailResponse = {
       success: false,
       statusCode,
-      message:
+      messages:
         typeof err === 'string'
-          ? err
-          : err.message ?? exception.message ?? null,
+          ? [err]
+          : typeof err.message === 'string'
+          ? [err.message]
+          : err.message ?? [exception.message] ?? null,
       detail: this.getDetail(exception, err, req),
     };
 

@@ -9,6 +9,6 @@ export interface SuccessResponse {
 export interface FailResponse {
   success: boolean;
   statusCode: number;
-  message: string;
+  messages: string[];
   detail: string;
 }

@@ -33,6 +33,7 @@ import { UsersService } from '../users/users.service';
 import { SignupDto } from './dtos/signup.dto';
 import { UserEntryResponseDto } from '../users/dtos/user-entry-response.dto';
 import { ApiFile } from 'src/common/decorators/swagger.schema';
+import { CheckNicknameDto } from './dtos/check-nickname.dto';
 
 @Controller('auth')
 @ApiTags('Auth')
@@ -221,7 +222,14 @@ export class AuthController {
               example: 400,
             },
             message: {
-              type: 'string',
+              type: 'array',
+              items: {
+                type: 'string',
+              },
+              example: [
+                '닉네임은 3글자 이상 10글자 이하로 입력해주세요.',
+                '닉네임에 특수문자는 입력할 수 없습니다.',
+              ],
             },
             detail: {
               type: 'string',
@@ -248,8 +256,11 @@ export class AuthController {
               example: 413,
             },
             message: {
-              type: 'string',
-              example: 'File too large',
+              type: 'array',
+              items: {
+                type: 'string',
+              },
+              example: ['File too large'],
             },
             detail: {
               type: 'string',
@@ -271,6 +282,43 @@ export class AuthController {
     );
     this.authService.setRefreshToken(res, refreshToken);
     return { accessToken };
+  }
+
+  @Post('signup/check-nickname')
+  @ApiOperation({
+    summary: '닉네임 중복 확인 API',
+    description: `
+    닉네임이 중복되는지 확인합니다.`,
+  })
+  @ApiResponse({
+    status: 200,
+    description: '닉네임 중복 확인 성공 여부',
+    content: {
+      'application/json': {
+        schema: {
+          type: 'object',
+          properties: {
+            success: {
+              type: 'boolean',
+            },
+            data: {
+              type: 'object',
+              properties: {
+                isAvailable: {
+                  type: 'boolean',
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  })
+  async checkNickname(@Body() body: CheckNicknameDto) {
+    const isAvailable = await this.usersService.checkAvailableNickname(
+      body.nickname,
+    );
+    return { isAvailable };
   }
 
   @Get('/me')

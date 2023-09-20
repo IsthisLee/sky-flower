@@ -1,4 +1,9 @@
-import { type Type, UseInterceptors, applyDecorators } from '@nestjs/common';
+import {
+  type Type,
+  UseInterceptors,
+  applyDecorators,
+  UnprocessableEntityException,
+} from '@nestjs/common';
 import {
   PARAMTYPES_METADATA,
   ROUTE_ARGS_METADATA,
@@ -115,8 +120,11 @@ export function ApiFile(
 
   const limits = { fileSize: 500 * 1024 * 1024 }; // 500MB
   const fileFilter = (req, file, callback) => {
-    if (!file.mimetype.match(/\/(jpg|jpeg|png|gif)$/)) {
-      return callback(new Error('Only image files are allowed!'), false);
+    if (!file.mimetype.match(/\/(jpg|png)$/)) {
+      return callback(
+        new UnprocessableEntityException('jpg, png 형식만 업로드 가능합니다.'),
+        false,
+      );
     }
     callback(null, true);
   };
