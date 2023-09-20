@@ -98,6 +98,7 @@ export class AuthService {
       return tokenInfo;
     } catch (error) {
       if (error.response.data.error_code === 'KOE320') {
+        console.log('error.response.data: ', error.response.data);
         throw new UnprocessableEntityException(
           '카카오 인증 code가 유효하지 않습니다.',
         );
