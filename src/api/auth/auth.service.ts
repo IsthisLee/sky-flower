@@ -210,16 +210,9 @@ export class AuthService {
 
   setRefreshToken(res: Response, refreshToken: string) {
     res.cookie('refreshToken', refreshToken, {
-      domain:
-        this.configService.get('NODE_ENV') === 'development' ||
-        this.configService.get('NODE_ENV') === 'local'
-          ? 'localhost'
-          : this.configService.get('COMMON_COOKIE_DOMAIN'),
       httpOnly: true,
       path: '/',
-      sameSite:
-        this.configService.get('NODE_ENV') === 'production' ? 'none' : 'strict',
-      secure: this.configService.get('NODE_ENV') === 'production',
+      secure: this.configService.get('NODE_ENV') !== 'local',
       maxAge: 24 * 60 * 60 * 1000 * 14, // 14일
     });
   }
