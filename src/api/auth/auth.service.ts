@@ -64,12 +64,10 @@ export class AuthService {
       await this.getKakaoTokenInfo(code);
     const profile = await this.getKakaoUserProfile(accessToken, tokenType);
 
-    const { id, kakao_account } = profile;
+    const { id } = profile;
 
     return {
       oauthId: id.toString(),
-      nickname: kakao_account.profile.nickname,
-      oauthProfileUrl: kakao_account.profile.profile_image_url,
     };
   }
 
@@ -116,7 +114,7 @@ export class AuthService {
       },
     });
 
-    if (!profile || !profile.kakao_account)
+    if (!profile || !profile.id)
       throw new BadRequestException('카카오 프로필 정보를 가져올 수 없습니다.');
 
     return profile;

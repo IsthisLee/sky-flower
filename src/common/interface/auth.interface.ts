@@ -14,8 +14,6 @@ export interface CreateUserInfo {
 
 export interface OauthUserInfo {
   oauthId: string;
-  nickname: string;
-  oauthProfileUrl?: string;
 }
 
 export interface RequestWithUser extends Request {
