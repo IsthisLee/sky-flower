@@ -44,7 +44,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
       detail: this.getDetail(exception, err, req),
     };
 
-    this.logErrorOrWarning(stack, resObject, req);
+    this.logErrorOrWarning(stack, resObject);
 
     response.status(statusCode).json(resObject);
   }
@@ -61,20 +61,9 @@ export class HttpExceptionFilter implements ExceptionFilter {
     return null;
   }
 
-  private logErrorOrWarning(
-    stack: string,
-    resObject: FailResponse,
-    request: Request,
-  ): void {
-    const log: Log = {
-      timestamp: dayjs().format('YYYY-MM-DD HH:mm:ss'),
-      method: request.method,
-      url: request.url,
-      res: resObject,
-    };
-
+  private logErrorOrWarning(stack: string, resObject: FailResponse): void {
     if (resObject.statusCode >= 500) {
-      this.logger.error(log, stack);
+      this.logger.error(stack);
     } else {
       this.logger.warn(stack);
     }

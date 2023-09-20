@@ -1,5 +1,6 @@
 import {
   Injectable,
+  InternalServerErrorException,
   Logger,
   UnprocessableEntityException,
 } from '@nestjs/common';
@@ -28,12 +29,13 @@ export class AuthService {
   async oAuthLogin(
     loginType: Provider,
     code: string,
+    isLocalClient: boolean,
   ): Promise<{ accessToken: string; refreshToken: string } | string> {
     // OAuth 토큰 검증
     let oAuthUser: OauthUserInfo;
     switch (loginType) {
       case Provider.kakao:
-        oAuthUser = await this.loginWithKakao(code);
+        oAuthUser = await this.loginWithKakao(code, isLocalClient);
         break;
 
       default:
@@ -59,19 +61,31 @@ export class AuthService {
     return { accessToken, refreshToken };
   }
 
-  async loginWithKakao(code: string): Promise<OauthUserInfo> {
-    const { access_token: accessToken, token_type: tokenType } =
-      await this.getKakaoTokenInfo(code);
-    const profile = await this.getKakaoUserProfile(accessToken, tokenType);
+  async loginWithKakao(
+    code: string,
+    isLocalClient: boolean,
+  ): Promise<OauthUserInfo> {
+    try {
+      const { access_token: accessToken, token_type: tokenType } =
+        await this.getKakaoTokenInfo(code, isLocalClient);
+      const profile = await this.getKakaoUserProfile(accessToken, tokenType);
 
-    const { id } = profile;
+      const { id } = profile;
 
-    return {
-      oauthId: id.toString(),
-    };
+      return {
+        oauthId: id.toString(),
+      };
+    } catch (error) {
+      if (error.status >= 500) {
+        this.logger.error(error);
+        throw new InternalServerErrorException('카카오 로그인에 실패했습니다.');
+      }
+
+      throw error;
+    }
   }
 
-  async getKakaoTokenInfo(code: string) {
+  async getKakaoTokenInfo(code: string, isLocalClient: boolean) {
     try {
       const tokenInfo = await this.requestService.requestData({
         method: 'POST',
@@ -80,7 +94,9 @@ export class AuthService {
           params: {
             grant_type: 'authorization_code',
             client_id: this.configService.get('KAKAO_REST_API_KEY'),
-            redirect_uri: this.configService.get('KAKAO_REDIRECT_URI'),
+            redirect_uri: isLocalClient
+              ? this.configService.get('KAKAO_LOCAL_REDIRECT_URI')
+              : this.configService.get('KAKAO_REDIRECT_URI'),
             code,
           },
         },
@@ -95,12 +111,18 @@ export class AuthService {
 
       return tokenInfo;
     } catch (error) {
-      if (error.response.data.error_code === 'KOE320') {
-        console.log('error.response.data: ', error.response.data);
+      if (error.response?.data?.error_code === 'KOE320') {
         throw new UnprocessableEntityException(
           '카카오 인증 code가 유효하지 않습니다.',
         );
       }
+
+      if (error.response?.data?.error_code === 'KOE303') {
+        throw new InternalServerErrorException(
+          '리다이렉트 URI가 일치하지 않습니다.',
+        );
+      }
+
       throw error;
     }
   }

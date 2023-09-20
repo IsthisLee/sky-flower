@@ -8,6 +8,7 @@ import {
   Get,
   Body,
   UploadedFile,
+  Req,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -23,7 +24,7 @@ import {
 } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { Provider } from '@prisma/client';
-import { Response } from 'express';
+import { Response, Request } from 'express';
 import { LoginDto } from './dtos/login.dto';
 import { AuthGuard } from '@nestjs/passport';
 import { JwtUserPayload } from 'src/common/decorators/jwt-user.decorator';
@@ -53,7 +54,7 @@ export class AuthController {
     enumName: 'Provider',
   })
   @ApiResponse({
-    status: 200,
+    status: 201,
     description: '로그인 성공 / 회원가입 필요',
     content: {
       'application/json': {
@@ -150,14 +151,18 @@ export class AuthController {
     },
   })
   async oAuthLogin(
+    @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
     @Param('login_type', new ParseEnumPipe(Provider))
     login_type: Provider,
     @Body() loginDto: LoginDto,
   ) {
+    const isLocalClient = req.headers.referer.includes('localhost');
+
     const loginResult = await this.authService.oAuthLogin(
       login_type,
       loginDto.code,
+      isLocalClient,
     );
     if (typeof loginResult === 'string') {
       return { needSignup: true, oauthId: loginResult };
