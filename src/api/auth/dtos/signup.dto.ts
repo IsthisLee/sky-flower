@@ -17,8 +17,8 @@ export class SignupDto {
   })
   @v.IsNotEmpty()
   @v.IsString()
-  @v.Length(3, 10, {
-    message: '닉네임은 3글자 이상 10글자 이하로 입력해주세요.',
+  @v.Length(1, 10, {
+    message: '닉네임은 1글자 이상 10글자 이하로 입력해주세요.',
   })
   @v.Matches(/^[a-zA-Z0-9ㄱ-ㅎㅏ-ㅣ가-힣]*$/, {
     message: '닉네임에 특수문자는 입력할 수 없습니다.',

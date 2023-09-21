@@ -5,6 +5,7 @@ import {
   ApiBearerAuth,
   ApiExtraModels,
   ApiOkResponse,
+  ApiOperation,
   ApiTags,
   getSchemaPath,
 } from '@nestjs/swagger';
@@ -21,6 +22,11 @@ export class UsersController {
   @Patch('profile')
   @UseGuards(AuthGuard('jwt-access'))
   @ApiBearerAuth('access-token')
+  @ApiOperation({
+    summary: '프로필 수정 API',
+    description: `
+    프로필 정보를 수정합니다.`,
+  })
   @ApiExtraModels(UpdatedUserEntryResponseDto)
   @ApiOkResponse({
     description: '프로필 수정 성공',
