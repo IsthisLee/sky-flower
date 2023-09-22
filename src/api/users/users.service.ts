@@ -63,6 +63,10 @@ export class UsersService {
         },
       });
 
+      if (!profileImageUrl) {
+        return newUser;
+      }
+
       // create profile image
       const { originalName, fileType, ext } =
         this.generatorService.fileInfoByFilePath(profileImageUrl);
