@@ -52,7 +52,7 @@ export class S3Service {
     });
 
     const signedUrl = await getSignedUrl(this.s3Client, command, {
-      expiresIn: 3600,
+      expiresIn: 60,
     }).catch((err) => {
       this.logger.error(err);
       throw new InternalServerErrorException('S3 signed url 생성 실패');
