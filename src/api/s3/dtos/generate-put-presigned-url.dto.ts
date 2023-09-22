@@ -33,7 +33,7 @@ export class GeneratePutPresignedUrlDto {
   contentLength: number;
 }
 
-export class GeneratePutPresignedUrlOutputDto {
+export class GeneratePutPresignedUrlResponseDto {
   @ApiProperty({
     description: 'put preSigned URL',
     type: 'string',

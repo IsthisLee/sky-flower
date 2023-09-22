@@ -2,7 +2,7 @@ import { Body, Controller, Post } from '@nestjs/common';
 import { S3Service } from './s3.service';
 import {
   GeneratePutPresignedUrlDto,
-  GeneratePutPresignedUrlOutputDto,
+  GeneratePutPresignedUrlResponseDto,
 } from './dtos/generate-put-presigned-url.dto';
 import { ApiCreatedResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 
@@ -19,11 +19,11 @@ export class S3Controller {
   })
   @ApiCreatedResponse({
     description: 'S3 PutObject SignedUrl 생성 성공',
-    type: GeneratePutPresignedUrlOutputDto,
+    type: GeneratePutPresignedUrlResponseDto,
   })
   async generatePutObjectPresignedUrl(
     @Body() generatePutPresignedUrlDto: GeneratePutPresignedUrlDto,
-  ): Promise<GeneratePutPresignedUrlOutputDto> {
+  ): Promise<GeneratePutPresignedUrlResponseDto> {
     return this.s3Service.generatePutObjectSignedUrl(
       generatePutPresignedUrlDto,
     );

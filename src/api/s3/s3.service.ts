@@ -10,7 +10,7 @@ import { ConfigService } from '@nestjs/config';
 import { GeneratorService } from '../../shared/services/generator.service';
 import {
   GeneratePutPresignedUrlDto,
-  GeneratePutPresignedUrlOutputDto,
+  GeneratePutPresignedUrlResponseDto,
 } from './dtos/generate-put-presigned-url.dto';
 
 @Injectable()
@@ -35,7 +35,7 @@ export class S3Service {
     originalFileName,
     fileExtension,
     contentLength,
-  }: GeneratePutPresignedUrlDto): Promise<GeneratePutPresignedUrlOutputDto> {
+  }: GeneratePutPresignedUrlDto): Promise<GeneratePutPresignedUrlResponseDto> {
     const fileContentType = <string>mime.contentType(fileExtension);
 
     const fileName = this.generatorService.fileName(
