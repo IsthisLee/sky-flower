@@ -1,6 +1,7 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Provider } from '@prisma/client';
 import * as v from 'class-validator';
+import { IsValidFilePath } from 'src/common/decorators/validator.decorators';
 
 export class SignupDto {
   @ApiProperty({
@@ -33,4 +34,14 @@ export class SignupDto {
   @v.IsNotEmpty()
   @v.IsEnum(Provider)
   loginType: Provider = Provider.kakao;
+
+  @ApiPropertyOptional({
+    example: 'profileImageUrl',
+    required: false,
+    description: '프로필 이미지 URL',
+  })
+  @v.IsOptional()
+  @v.IsString()
+  @IsValidFilePath()
+  profileImageUrl?: string;
 }

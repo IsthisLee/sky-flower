@@ -6,12 +6,6 @@ export interface JwtPayloadInfo {
   exp?: number;
 }
 
-export interface CreateUserInfo {
-  oauthId: string;
-  nickname: string;
-  profileImageId?: number;
-}
-
 export interface OauthUserInfo {
   oauthId: string;
 }

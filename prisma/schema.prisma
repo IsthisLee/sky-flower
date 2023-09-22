@@ -97,7 +97,7 @@ enum Provider {
 }
 
 enum FileType {
-  profile_image
-  post_image
-  document
+  image
+  video
+  other
 }

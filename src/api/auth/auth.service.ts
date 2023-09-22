@@ -143,17 +143,7 @@ export class AuthService {
   }
 
   async signup(signupDto: SignupDto) {
-    const { nickname, oauthId, loginType } = signupDto;
-
-    // TODO: 프로필 이미지 업로드 기능 추가
-
-    const user = await this.usersService.create(
-      {
-        nickname,
-        oauthId,
-      },
-      loginType,
-    );
+    const user = await this.usersService.create(signupDto);
 
     const userPayloadInfo = this.getUserPayloadInfo(user);
     const { accessToken, refreshToken } = await this.generateTokens(

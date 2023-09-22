@@ -4,13 +4,17 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { Provider, User } from '@prisma/client';
-import { CreateUserInfo } from '../../common/interface';
 import { PrismaService } from 'src/shared/services/prisma.service';
 import { UserUpdateDto } from './dtos/user-update.dto';
+import { GeneratorService } from 'src/shared/services/generator.service';
+import { SignupDto } from '../auth/dtos/signup.dto';
 
 @Injectable()
 export class UsersService {
-  constructor(private readonly prismaService: PrismaService) {}
+  constructor(
+    private readonly prismaService: PrismaService,
+    private readonly generatorService: GeneratorService,
+  ) {}
 
   async findOneByOAuthId(oauthId: string, loginType: Provider): Promise<User> {
     return await this.prismaService.user.findFirst({
@@ -27,28 +31,53 @@ export class UsersService {
     });
   }
 
-  async create(user: CreateUserInfo, provider: Provider): Promise<User> {
+  async create(signupDto: SignupDto): Promise<User> {
+    const {
+      oauthId,
+      nickname,
+      profileImageUrl,
+      loginType: provider,
+    } = signupDto;
+
     // validation
-    const isExistOAuthId = await this.findOneByOAuthId(user.oauthId, provider);
+    const isExistOAuthId = await this.findOneByOAuthId(oauthId, provider);
     if (isExistOAuthId) {
       throw new BadRequestException('이미 가입된 회원입니다.');
     }
 
-    // create user
+    // create user process
     const newUserResult = await this.prismaService.$transaction(async (tx) => {
+      // create user
       const newUser = await tx.user.create({
         data: {
-          nickname: user.nickname,
-          profileImageId: user.profileImageId,
+          nickname: nickname,
         },
       });
 
+      // create user oauth
       await tx.userOauth.create({
         data: {
-          oauthId: user.oauthId,
+          oauthId: oauthId,
           provider,
           userId: newUser.id,
         },
+      });
+
+      // create profile image
+      const { originalName, fileType, ext } =
+        this.generatorService.fileInfoByFilePath(profileImageUrl);
+      const createdFile = await tx.file.create({
+        data: {
+          userId: newUser.id,
+          originalFileName: originalName,
+          fileType,
+          fileExtension: ext,
+          filePath: profileImageUrl,
+        },
+      });
+      await tx.user.update({
+        where: { id: newUser.id },
+        data: { profileImageId: createdFile.id },
       });
 
       return newUser;
