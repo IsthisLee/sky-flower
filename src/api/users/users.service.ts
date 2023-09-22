@@ -152,4 +152,19 @@ export class UsersService {
 
     return updatedUser.profileImage.filePath;
   }
+
+  async deleteAccount(userId: number) {
+    const user = await this.prismaService.user.findUnique({
+      where: { id: userId, deletedAt: null },
+    });
+
+    if (!user) {
+      throw new NotFoundException('회원 정보를 찾을 수 없습니다.');
+    }
+
+    await this.prismaService.user.update({
+      where: { id: userId },
+      data: { deletedAt: new Date() },
+    });
+  }
 }

@@ -1,11 +1,12 @@
 import { JwtUserPayload } from 'src/common/decorators/jwt-user.decorator';
-import { Body, Controller, Patch, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Patch, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import {
   ApiBearerAuth,
   ApiExtraModels,
   ApiOkResponse,
   ApiOperation,
+  ApiResponse,
   ApiTags,
   getSchemaPath,
 } from '@nestjs/swagger';
@@ -94,5 +95,20 @@ export class UsersController {
     return {
       profileImageUrl: updatedProfileImageUrl,
     };
+  }
+
+  @Delete('/delete')
+  @UseGuards(AuthGuard('jwt-access'))
+  @ApiBearerAuth('access-token')
+  @ApiOperation({
+    summary: '회원 탈퇴 API',
+  })
+  @ApiOkResponse({ description: '회원 탈퇴 성공' })
+  @ApiResponse({ status: 400, description: 'Bad Request.' })
+  @ApiResponse({ status: 401, description: 'Unauthorized.' })
+  @ApiResponse({ status: 404, description: 'Not Found.' })
+  @ApiResponse({ status: 500, description: 'Internal Server Error.' })
+  async deleteAccount(@JwtUserPayload() jwtUser: JwtPayloadInfo) {
+    await this.usersService.deleteAccount(jwtUser.userId);
   }
 }
