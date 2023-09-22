@@ -58,6 +58,15 @@ export class S3Service {
       throw new InternalServerErrorException('S3 signed url 생성 실패');
     });
 
-    return { signedUrl, fileName };
+    const s3Url = `https://${this.configService.get<string>(
+      'AWS_S3_BUCKET_NAME',
+    )}.s3.${this.configService.get<string>(
+      'AWS_S3_BUCKET_REGION',
+    )}.amazonaws.com/${key}`;
+
+    return {
+      signedUrl,
+      s3Url,
+    };
   }
 }

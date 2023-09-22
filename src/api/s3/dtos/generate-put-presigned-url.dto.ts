@@ -42,9 +42,9 @@ export class GeneratePutPresignedUrlResponseDto {
   signedUrl: string;
 
   @ApiProperty({
-    description: '파일 이름',
+    description: '생성되는 파일 경로',
     type: 'string',
   })
   @v.IsString()
-  fileName: string;
+  s3Url: string;
 }
