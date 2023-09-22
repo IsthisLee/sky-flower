@@ -25,3 +25,8 @@ export class UpdatedUserEntryResponseDto extends PickType(
   UserEntryResponseDto,
   ['userId', 'nickname'],
 ) {}
+
+export class UpdatedUserImageEntryResponseDto extends PickType(
+  UserEntryResponseDto,
+  ['profileImageUrl'],
+) {}

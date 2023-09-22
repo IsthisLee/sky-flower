@@ -112,4 +112,40 @@ export class UsersService {
 
     return updatedUser;
   }
+
+  async updateProfileImage(
+    userId: number,
+    profileImageUrl: string,
+  ): Promise<string> {
+    const user = await this.prismaService.user.findUnique({
+      where: { id: userId, deletedAt: null },
+    });
+
+    if (!user) {
+      throw new NotFoundException('회원 정보를 찾을 수 없습니다.');
+    }
+
+    const { originalName, fileType, ext } =
+      this.generatorService.fileInfoByFilePath(profileImageUrl);
+
+    const updatedUser = await this.prismaService.$transaction(async (tx) => {
+      const createdFile = await tx.file.create({
+        data: {
+          userId: userId,
+          originalFileName: originalName,
+          fileType,
+          fileExtension: ext,
+          filePath: profileImageUrl,
+        },
+      });
+
+      return await tx.user.update({
+        where: { id: userId },
+        data: { profileImageId: createdFile.id },
+        include: { profileImage: { select: { filePath: true } } },
+      });
+    });
+
+    return updatedUser.profileImage.filePath;
+  }
 }

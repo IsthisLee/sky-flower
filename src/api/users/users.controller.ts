@@ -10,9 +10,12 @@ import {
   getSchemaPath,
 } from '@nestjs/swagger';
 import { UsersService } from './users.service';
-import { UserUpdateDto } from './dtos/user-update.dto';
+import { UserImageUpdateDto, UserUpdateDto } from './dtos/user-update.dto';
 import { JwtPayloadInfo } from 'src/common/interface';
-import { UpdatedUserEntryResponseDto } from './dtos/user-entry-response.dto';
+import {
+  UpdatedUserEntryResponseDto,
+  UpdatedUserImageEntryResponseDto,
+} from './dtos/user-entry-response.dto';
 
 @Controller('users')
 @ApiTags('Users - 사용자')
@@ -53,6 +56,43 @@ export class UsersController {
     return {
       userId: updatedUser.id,
       nickname: updatedUser.nickname,
+    };
+  }
+
+  @Patch('profile-image')
+  @UseGuards(AuthGuard('jwt-access'))
+  @ApiBearerAuth('access-token')
+  @ApiOperation({
+    summary: '프로필 이미지 수정 API',
+    description: `
+    프로필 이미지를 수정합니다.`,
+  })
+  @ApiExtraModels(UpdatedUserImageEntryResponseDto)
+  @ApiOkResponse({
+    description: '프로필 이미지 수정 성공',
+    schema: {
+      type: 'object',
+      properties: {
+        success: {
+          type: 'boolean',
+        },
+        data: {
+          $ref: getSchemaPath(UpdatedUserImageEntryResponseDto),
+        },
+      },
+    },
+  })
+  async updateProfileImage(
+    @JwtUserPayload() jwtUser: JwtPayloadInfo,
+    @Body() updateProfileImageDto: UserImageUpdateDto,
+  ): Promise<UpdatedUserImageEntryResponseDto> {
+    const updatedProfileImageUrl = await this.usersService.updateProfileImage(
+      jwtUser.userId,
+      updateProfileImageDto.profileImageUrl,
+    );
+
+    return {
+      profileImageUrl: updatedProfileImageUrl,
     };
   }
 }

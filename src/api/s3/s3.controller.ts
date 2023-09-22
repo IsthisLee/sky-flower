@@ -4,7 +4,13 @@ import {
   GeneratePutPresignedUrlDto,
   GeneratePutPresignedUrlResponseDto,
 } from './dtos/generate-put-presigned-url.dto';
-import { ApiCreatedResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+  ApiCreatedResponse,
+  ApiExtraModels,
+  ApiOperation,
+  ApiTags,
+  getSchemaPath,
+} from '@nestjs/swagger';
 
 @Controller('s3')
 @ApiTags('s3')
@@ -17,9 +23,20 @@ export class S3Controller {
     description: `
     파일 업로드를 위한 S3 PutObject SignedUrl을 생성합니다.`,
   })
+  @ApiExtraModels(GeneratePutPresignedUrlResponseDto)
   @ApiCreatedResponse({
     description: 'S3 PutObject SignedUrl 생성 성공',
-    type: GeneratePutPresignedUrlResponseDto,
+    schema: {
+      type: 'object',
+      properties: {
+        success: {
+          type: 'boolean',
+        },
+        data: {
+          $ref: getSchemaPath(GeneratePutPresignedUrlResponseDto),
+        },
+      },
+    },
   })
   async generatePutObjectPresignedUrl(
     @Body() generatePutPresignedUrlDto: GeneratePutPresignedUrlDto,
