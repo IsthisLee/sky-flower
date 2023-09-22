@@ -8,6 +8,7 @@ import { AuthModule } from './api/auth/auth.module';
 import { UsersModule } from './api/users/users.module';
 import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
 import { HttpExceptionFilter } from './common/exceptions/http-exception.filter';
+import { S3Module } from './s3/s3.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { HttpExceptionFilter } from './common/exceptions/http-exception.filter';
         process.env.NODE_ENV ? `.${process.env.NODE_ENV}` : ''
       }`,
     }),
+    S3Module,
     AuthModule,
     UsersModule,
     SharedModule,

@@ -20,6 +20,8 @@
     "test:e2e": "jest --config ./test/jest-e2e.json"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.417.0",
+    "@aws-sdk/s3-request-presigner": "^3.417.0",
     "@nestjs/axios": "^3.0.0",
     "@nestjs/common": "^10.0.0",
     "@nestjs/config": "^3.1.1",
@@ -36,10 +38,12 @@
     "cookie-parser": "^1.4.6",
     "dayjs": "^1.11.9",
     "lodash": "^4.17.21",
+    "mime-types": "^2.1.35",
     "passport": "^0.6.0",
     "passport-jwt": "^4.0.1",
     "reflect-metadata": "^0.1.13",
-    "rxjs": "^7.8.1"
+    "rxjs": "^7.8.1",
+    "uuid": "^9.0.1"
   },
   "devDependencies": {
     "@nestjs/cli": "^10.0.0",
@@ -50,10 +54,12 @@
     "@types/express": "^4.17.17",
     "@types/jest": "^29.5.2",
     "@types/lodash": "^4.14.198",
+    "@types/mime-types": "^2.1.1",
     "@types/multer": "^1.4.7",
     "@types/node": "^20.3.1",
     "@types/passport-jwt": "^3.0.9",
     "@types/supertest": "^2.0.12",
+    "@types/uuid": "^9.0.4",
     "@typescript-eslint/eslint-plugin": "^5.59.11",
     "@typescript-eslint/parser": "^5.59.11",
     "eslint": "^8.42.0",

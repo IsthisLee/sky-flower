@@ -2,8 +2,9 @@ import { Global, Module } from '@nestjs/common';
 import { HttpModule } from '@nestjs/axios';
 import { PrismaService } from './services/prisma.service';
 import { RequestService } from './services/request.service';
+import { GeneratorService } from './services/generator.service';
 
-const providers = [PrismaService, RequestService];
+const providers = [PrismaService, RequestService, GeneratorService];
 
 @Global()
 @Module({
