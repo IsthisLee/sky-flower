@@ -7,7 +7,7 @@ import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import mime from 'mime-types';
 import { ConfigService } from '@nestjs/config';
-import { GeneratorService } from '../shared/services/generator.service';
+import { GeneratorService } from '../../shared/services/generator.service';
 import {
   GeneratePutPresignedUrlDto,
   GeneratePutPresignedUrlOutputDto,

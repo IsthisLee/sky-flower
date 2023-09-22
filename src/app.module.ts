@@ -8,7 +8,7 @@ import { AuthModule } from './api/auth/auth.module';
 import { UsersModule } from './api/users/users.module';
 import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
 import { HttpExceptionFilter } from './common/exceptions/http-exception.filter';
-import { S3Module } from './s3/s3.module';
+import { S3Module } from './api/s3/s3.module';
 
 @Module({
   imports: [
