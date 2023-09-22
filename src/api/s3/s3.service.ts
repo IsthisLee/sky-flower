@@ -33,18 +33,22 @@ export class S3Service {
 
   async generatePutObjectSignedUrl({
     originalFileName,
-    mimetype,
+    fileExtension,
+    contentLength,
   }: GeneratePutPresignedUrlDto): Promise<GeneratePutPresignedUrlOutputDto> {
+    const fileContentType = <string>mime.contentType(fileExtension);
+
     const fileName = this.generatorService.fileName(
       originalFileName,
-      <string>mime.extension(mimetype),
+      <string>mime.extension(fileContentType),
     );
 
     const key = 'images/' + fileName;
     const command = new PutObjectCommand({
       Bucket: this.configService.get<string>('AWS_S3_BUCKET_NAME'),
       Key: key,
-      ContentType: mimetype,
+      ContentType: fileContentType,
+      ContentLength: contentLength,
     });
 
     const signedUrl = await getSignedUrl(this.s3Client, command, {
