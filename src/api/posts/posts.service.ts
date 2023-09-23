@@ -12,6 +12,19 @@ import { Prisma } from '@prisma/client';
 import dayjs from 'dayjs';
 import { PostEntryResponseDto } from './dtos/post-entry-responst.dto';
 
+const postSelect = {
+  id: true,
+  user: true,
+  address: true,
+  latitude: true,
+  longitude: true,
+  postLikes: true,
+  postFiles: {
+    select: { file: { select: { filePath: true } } },
+  },
+};
+type PostType = Prisma.PostGetPayload<{ select: typeof postSelect }>;
+
 @Injectable()
 export class PostsService {
   constructor(
@@ -66,7 +79,7 @@ export class PostsService {
   }
 
   // TODO: Prisma.postGetPayload를 통해 타입 정의
-  private getPostResponse(post: any): PostEntryResponseDto {
+  private getPostResponse(post: PostType): PostEntryResponseDto {
     return {
       id: post.id,
       userId: post.user.id,
@@ -97,7 +110,7 @@ export class PostsService {
         LIMIT ${limit} OFFSET ${(page - 1) * limit}
       `;
       // TODO: Prisma.postGetPayload를 통해 타입 정의
-      const posts: any[] = await this.prisma.$queryRawUnsafe(query);
+      const posts: PostType[] = await this.prisma.$queryRawUnsafe(query);
 
       const responsePosts = posts.map((post) => this.getPostResponse(post));
 
