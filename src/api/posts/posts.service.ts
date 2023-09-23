@@ -141,7 +141,7 @@ export class PostsService {
 
     return {
       first: page === 1,
-      last: page * limit >= totalCount && currentElementsCount > 0,
+      last: page * limit >= totalCount,
       currentElements: currentElementsCount,
       size: limit,
       totalElements: totalCount,
@@ -172,26 +172,70 @@ export class PostsService {
         page,
         limit,
       });
+    } else if (sort === SortEnum.LIKE) {
+      const now = dayjs();
+      const today4AM = dayjs().startOf('day').add(4, 'hour');
+
+      let startDate: dayjs.Dayjs;
+      let endDate: dayjs.Dayjs;
+
+      // 오늘 4시 이전에 조회하면 어제 좋아요 누적된 순위를 보여줘야 함.
+      // 오늘 4시 이후에 조회하면 오늘 좋아요 누적된 순위를 보여줘야 함.
+      if (now.isAfter(today4AM)) {
+        startDate = dayjs().startOf('day');
+        endDate = dayjs().endOf('day');
+      } else {
+        startDate = dayjs().subtract(1, 'day').startOf('day');
+        endDate = dayjs().subtract(1, 'day').endOf('day');
+      }
+
+      const query = `
+            SELECT 
+                "Post"."id", 
+                COUNT(
+                    CASE 
+                        WHEN "PostLike"."created_at" BETWEEN '${startDate
+                          .toDate()
+                          .toISOString()}' AND '${endDate
+        .toDate()
+        .toISOString()}' THEN 1 
+                        ELSE NULL 
+                    END
+                ) as "todayLikeCount"
+            FROM "Post"
+            LEFT JOIN "PostLike" ON "Post"."id" = "PostLike"."post_id"
+            GROUP BY "Post"."id"
+            ORDER BY "todayLikeCount" DESC, "Post"."created_at" DESC
+            LIMIT ${limit} OFFSET ${(page - 1) * limit}
+            `;
+      const likeRankPosts: { id: number; todayLikeCount: bigint }[] =
+        await this.prisma.$queryRawUnsafe(query);
+
+      const posts = await this.prisma.post.findMany({
+        where: {
+          id: { in: likeRankPosts.map((likeRankPost) => likeRankPost.id) },
+        },
+        select: postSelect,
+      });
+
+      const reOrderedPost = likeRankPosts
+        .map((likeRankPost) => {
+          return posts.find((post) => post.id === likeRankPost.id);
+        })
+        .filter(Boolean);
+
+      return await this.getPostsResponse({
+        posts: reOrderedPost,
+        visitUserId: 0,
+        page,
+        limit,
+      });
     } else {
       let orderBy:
         | Prisma.PostOrderByWithRelationInput
         | Prisma.PostOrderByWithRelationInput[];
-      let postLikesWhere: Prisma.PostLikeWhereInput = {};
 
       switch (sort) {
-        case SortEnum.LIKE:
-          const today4AM = dayjs().startOf('day').add(4, 'hour');
-          const filterDate = today4AM.isAfter(dayjs())
-            ? dayjs().subtract(1, 'day').startOf('day').add(4, 'hour')
-            : today4AM;
-
-          orderBy = [{ postLikes: { _count: 'desc' } }, { createdAt: 'desc' }];
-          postLikesWhere = {
-            createdAt: {
-              gte: filterDate.toDate(),
-            },
-          };
-          break;
         case SortEnum.DESC:
           orderBy = { createdAt: 'desc' };
           break;
@@ -201,19 +245,7 @@ export class PostsService {
         skip: (page - 1) * limit,
         take: limit,
         orderBy,
-        select: {
-          id: true,
-          address: true,
-          latitude: true,
-          longitude: true,
-          user: true,
-          postLikes: {
-            where: postLikesWhere,
-          },
-          postFiles: {
-            select: { file: { select: { filePath: true } } },
-          },
-        },
+        select: postSelect,
       });
 
       return await this.getPostsResponse({
