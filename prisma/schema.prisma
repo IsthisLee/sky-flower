@@ -4,8 +4,8 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
   extensions = [cube(version: "1.5"), earthdistance(version: "1.1")]
 }
 
@@ -32,8 +32,6 @@ model UserOauth {
   updatedAt DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamp(0)
   deletedAt DateTime? @map("deleted_at") @db.Timestamp(0)
   user      User      @relation(fields: [userId], references: [id])
-
-  @@unique([oauthId, provider])
 }
 
 model File {
@@ -72,6 +70,7 @@ model Post {
 }
 
 model PostFile {
+  id        Int       @id @default(autoincrement())
   postId    Int       @map("post_id")
   fileId    Int       @map("file_id")
   createdAt DateTime  @default(now()) @map("created_at") @db.Timestamp(0)
@@ -79,11 +78,10 @@ model PostFile {
   updatedAt DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamp(0)
   file      File      @relation(fields: [fileId], references: [id])
   post      Post      @relation(fields: [postId], references: [id])
-
-  @@id([postId, fileId])
 }
 
 model PostLike {
+  id        Int       @id @default(autoincrement())
   userId    Int       @map("user_id")
   postId    Int       @map("post_id")
   createdAt DateTime  @default(now()) @map("created_at") @db.Timestamp(0)
@@ -91,8 +89,6 @@ model PostLike {
   deletedAt DateTime? @map("deleted_at") @db.Timestamp(0)
   post      Post      @relation(fields: [postId], references: [id])
   user      User      @relation(fields: [userId], references: [id])
-
-  @@id([userId, postId])
 }
 
 enum Provider {

@@ -21,6 +21,7 @@ const postSelect = {
       id: true,
       nickname: true,
       profileImage: { select: { filePath: true } },
+      deletedAt: true,
     },
   },
   address: true,
@@ -28,7 +29,10 @@ const postSelect = {
   longitude: true,
   postLikes: true,
   postFiles: {
-    select: { file: { select: { filePath: true } } },
+    where: { deletedAt: null, file: { deletedAt: null } },
+    select: {
+      file: { select: { filePath: true } },
+    },
   },
 };
 type PostType = Prisma.PostGetPayload<{ select: typeof postSelect }>;
@@ -95,10 +99,11 @@ export class PostsService {
       userId: post.user.id,
       userNickname: post.user.nickname,
       userProfileUrl: post.user.profileImage?.filePath,
+      isDeletedUser: !!post.user.deletedAt,
       address: post.address,
       latitude: post.latitude,
       longitude: post.longitude,
-      photoUrl: post.postFiles[0].file.filePath,
+      photoUrl: post.postFiles[0]?.file.filePath,
       likeCount: post.postLikes.length,
       isLiked: post.postLikes.some(
         (postLike) => visitUserId === postLike.userId,
@@ -198,14 +203,14 @@ export class PostsService {
 
           query = `
             SELECT 
-                id, 
+                "Post".id, 
                 COUNT(
                     CASE 
                         WHEN "PostLike".created_at BETWEEN '${startDate
                           .toDate()
                           .toISOString()}' AND '${endDate
             .toDate()
-            .toISOString()}' THEN 1 
+            .toISOString()}' AND "PostLike".deleted_at IS NULL THEN 1 
                         ELSE NULL 
                     END
                 ) as todayLikeCount
@@ -219,6 +224,7 @@ export class PostsService {
                 }
             FROM "Post"
             LEFT JOIN "PostLike" ON "Post".id = "PostLike".post_id
+            WHERE "Post".deleted_at IS NULL
             GROUP BY "Post".id
             ORDER BY todayLikeCount DESC, ${
               userLatitude && userLongitude ? 'distance ASC, ' : ''

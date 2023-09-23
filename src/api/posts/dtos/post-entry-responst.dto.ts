@@ -26,6 +26,12 @@ export class PostEntryResponseDto {
   userProfileUrl: string;
 
   @ApiProperty({
+    title: '탈퇴한 유저인지 여부',
+    example: false,
+  })
+  isDeletedUser: boolean;
+
+  @ApiProperty({
     title: '장소',
     example: '오늘도 맑군',
   })
