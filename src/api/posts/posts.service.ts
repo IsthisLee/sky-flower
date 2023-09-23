@@ -11,6 +11,7 @@ import { SortEnum } from 'src/common/constants/sort';
 import { Prisma } from '@prisma/client';
 import dayjs from 'dayjs';
 import { PostEntryResponseDto } from './dtos/post-entry-responst.dto';
+import { PageResponse } from 'src/common/interface';
 
 const postSelect = {
   id: true,
@@ -78,8 +79,10 @@ export class PostsService {
     return newPost;
   }
 
-  // TODO: Prisma.postGetPayload를 통해 타입 정의
-  private getPostResponse(post: PostType): PostEntryResponseDto {
+  private getPostResponse(
+    post: PostType,
+    visitUserId: number,
+  ): PostEntryResponseDto {
     return {
       id: post.id,
       userId: post.user.id,
@@ -90,14 +93,66 @@ export class PostsService {
       photoUrl: post.postFiles[0].file.filePath,
       likeCount: post.postLikes.length,
       isLiked: post.postLikes.some(
-        (postLike) => postLike.userId === post.user.id,
+        (postLike) => visitUserId === postLike.userId,
       ),
+    };
+  }
+
+  private async getPostsResponse({
+    posts,
+    visitUserId,
+    page,
+    limit,
+  }: {
+    posts: PostType[];
+    visitUserId: number;
+    page: number;
+    limit: number;
+  }): Promise<PageResponse<PostEntryResponseDto[]>> {
+    const totalCount = await this.prisma.post.count();
+    const paginationData = this.generatePaginationData({
+      page,
+      limit,
+      totalCount,
+      currentElementsCount: posts.length,
+    });
+    const responsePosts = posts.map((post) =>
+      this.getPostResponse(post, visitUserId),
+    );
+
+    return {
+      ...paginationData,
+      list: responsePosts,
+    };
+  }
+
+  private generatePaginationData({
+    page,
+    limit,
+    totalCount,
+    currentElementsCount,
+  }: {
+    page: number;
+    limit: number;
+    totalCount: number;
+    currentElementsCount: number;
+  }): Omit<PageResponse<PostEntryResponseDto>, 'list'> {
+    const totalPages = Math.ceil(totalCount / limit);
+
+    return {
+      first: page === 1,
+      last: page * limit >= totalCount && currentElementsCount > 0,
+      currentElements: currentElementsCount,
+      size: limit,
+      totalElements: totalCount,
+      totalPages: totalPages,
+      currentPage: page,
     };
   }
 
   async getPosts(
     getPostsQuery: GetPostsQueryDto,
-  ): Promise<PostEntryResponseDto[]> {
+  ): Promise<PageResponse<PostEntryResponseDto[]>> {
     const { page, limit, sort, userLatitude, userLongitude } = getPostsQuery;
 
     if (sort === SortEnum.DISTANCE) {
@@ -109,12 +164,14 @@ export class PostsService {
         ORDER BY distance ASC
         LIMIT ${limit} OFFSET ${(page - 1) * limit}
       `;
-      // TODO: Prisma.postGetPayload를 통해 타입 정의
       const posts: PostType[] = await this.prisma.$queryRawUnsafe(query);
 
-      const responsePosts = posts.map((post) => this.getPostResponse(post));
-
-      return responsePosts;
+      return await this.getPostsResponse({
+        posts,
+        visitUserId: 0,
+        page,
+        limit,
+      });
     } else {
       let orderBy:
         | Prisma.PostOrderByWithRelationInput
@@ -159,9 +216,12 @@ export class PostsService {
         },
       });
 
-      const responsePosts = posts.map((post) => this.getPostResponse(post));
-
-      return responsePosts;
+      return await this.getPostsResponse({
+        posts,
+        visitUserId: 0,
+        page,
+        limit,
+      });
     }
   }
 
@@ -183,7 +243,7 @@ export class PostsService {
       },
     });
 
-    return this.getPostResponse(post);
+    return this.getPostResponse(post, 0);
   }
 
   async deletePost(userId: number, postId: number) {

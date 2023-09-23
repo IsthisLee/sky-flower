@@ -24,8 +24,9 @@ import {
 import { GetPostsQueryDto } from './dtos/get-posts.dto';
 import { CreatePostDto } from './dtos/create-post.dto';
 import { JwtUserPayload } from 'src/common/decorators/jwt-user.decorator';
-import { JwtPayloadInfo } from 'src/common/interface';
+import { JwtPayloadInfo, PageResponse } from 'src/common/interface';
 import { PostEntryResponseDto } from './dtos/post-entry-responst.dto';
+import { PostListResponseDto } from './dtos/posts-response.dto';
 
 @Controller('posts')
 @ApiTags('Posts - 게시글')
@@ -49,7 +50,7 @@ export class PostsController {
   @ApiOperation({
     summary: '게시글 목록 조회 API',
   })
-  @ApiExtraModels(PostEntryResponseDto)
+  @ApiExtraModels(PostListResponseDto)
   @ApiOkResponse({
     content: {
       'application/json': {
@@ -62,7 +63,7 @@ export class PostsController {
             data: {
               type: 'array',
               items: {
-                $ref: getSchemaPath(PostEntryResponseDto),
+                $ref: getSchemaPath(PostListResponseDto),
               },
             },
           },
@@ -72,7 +73,7 @@ export class PostsController {
   })
   async getPosts(
     @Query() getPostsQuery: GetPostsQueryDto,
-  ): Promise<PostEntryResponseDto[]> {
+  ): Promise<PageResponse<PostEntryResponseDto[]>> {
     return this.postsService.getPosts(getPostsQuery);
   }
 
