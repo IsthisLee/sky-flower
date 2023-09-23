@@ -20,6 +20,12 @@ export class PostEntryResponseDto {
   userNickname: string;
 
   @ApiProperty({
+    title: '유저 프로필 사진 경로',
+    example: 'https://s3.image.url',
+  })
+  userProfileUrl: string;
+
+  @ApiProperty({
     title: '장소',
     example: '오늘도 맑군',
   })

@@ -15,7 +15,13 @@ import { PageResponse } from 'src/common/interface';
 
 const postSelect = {
   id: true,
-  user: true,
+  user: {
+    select: {
+      id: true,
+      nickname: true,
+      profileImage: { select: { filePath: true } },
+    },
+  },
   address: true,
   latitude: true,
   longitude: true,
@@ -87,6 +93,7 @@ export class PostsService {
       id: post.id,
       userId: post.user.id,
       userNickname: post.user.nickname,
+      userProfileUrl: post.user.profileImage?.filePath,
       address: post.address,
       latitude: post.latitude,
       longitude: post.longitude,
@@ -262,17 +269,7 @@ export class PostsService {
       where: {
         id: postId,
       },
-      select: {
-        id: true,
-        user: true,
-        address: true,
-        latitude: true,
-        longitude: true,
-        postLikes: true,
-        postFiles: {
-          select: { file: { select: { filePath: true } } },
-        },
-      },
+      select: postSelect,
     });
 
     return this.getPostResponse(post, 0);
