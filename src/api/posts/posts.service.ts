@@ -27,7 +27,12 @@ const postSelect = {
   address: true,
   latitude: true,
   longitude: true,
-  postLikes: true,
+  postLikes: {
+    where: { deletedAt: null },
+    select: {
+      userId: true,
+    },
+  },
   postFiles: {
     where: { deletedAt: null, file: { deletedAt: null } },
     select: {
@@ -104,7 +109,7 @@ export class PostsService {
 
   private getPostResponse(
     post: PostType,
-    visitUserId: number,
+    visitUserId?: number,
   ): PostEntryResponseDto {
     return {
       id: post.id,
@@ -135,7 +140,7 @@ export class PostsService {
     limit,
   }: {
     posts: PostType[];
-    visitUserId: number;
+    visitUserId?: number;
     page: number;
     limit: number;
   }): Promise<PageResponse<PostEntryResponseDto[]>> {
@@ -181,6 +186,7 @@ export class PostsService {
   }
 
   async getPosts(
+    userId: number,
     getPostsQuery: GetPostsQueryDto,
   ): Promise<PageResponse<PostEntryResponseDto[]>> {
     const { page, limit, sort, userLatitude, userLongitude } = getPostsQuery;
@@ -203,7 +209,7 @@ export class PostsService {
 
         case SortEnum.LIKE:
           // 매일 04시 이후부터 당일 누적 좋아요 개수 기준(04시 이전은 전날 누적 좋아요 개수 기준)
-          // 정렬 기준: 좋아요 -> 최신순 -> 거리순
+          // 정렬 기준: 좋아요 -> 거리순 -> 최신순
           const now = dayjs();
           const today4AM = dayjs().startOf('day').add(4, 'hour');
 
@@ -251,10 +257,14 @@ export class PostsService {
           break;
       }
 
-      const postIdList: (
-        | { id: number; distance: number }
-        | { id: number; todayLikeCount: bigint }
-      )[] = await this.prisma.$queryRawUnsafe(query);
+      const postIdList = await this.prisma.$queryRawUnsafe<
+        (
+          | { id: number; distance: number }
+          | { id: number; todayLikeCount: bigint }
+        )[]
+      >(query);
+
+      console.log(postIdList);
 
       const posts = await this.prisma.post.findMany({
         where: {
@@ -271,7 +281,7 @@ export class PostsService {
 
       return await this.getPostsResponse({
         posts: reOrderedPost,
-        visitUserId: 0,
+        visitUserId: userId,
         page,
         limit,
       });
@@ -298,14 +308,14 @@ export class PostsService {
 
       return await this.getPostsResponse({
         posts,
-        visitUserId: 0,
+        visitUserId: userId,
         page,
         limit,
       });
     }
   }
 
-  async getPost(postId: number): Promise<PostEntryResponseDto> {
+  async getPost(userId: number, postId: number): Promise<PostEntryResponseDto> {
     const post = await this.prisma.post.findUnique({
       where: {
         id: postId,
@@ -313,7 +323,7 @@ export class PostsService {
       select: postSelect,
     });
 
-    return this.getPostResponse(post, 0);
+    return this.getPostResponse(post, userId);
   }
 
   async deletePost(userId: number, postId: number) {
@@ -341,6 +351,79 @@ export class PostsService {
     await this.prisma.post.update({
       where: {
         id: postId,
+      },
+      data: {
+        deletedAt: new Date(),
+      },
+    });
+  }
+
+  async likePost(userId: number, postId: number) {
+    const post = await this.prisma.post.findUnique({
+      where: {
+        id: postId,
+        deletedAt: null,
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    if (!post) {
+      throw new NotFoundException('게시글을 찾을 수 없습니다.');
+    }
+
+    const postLike = await this.prisma.postLike.findFirst({
+      where: {
+        postId,
+        userId,
+        deletedAt: null,
+      },
+    });
+
+    if (postLike) {
+      throw new BadRequestException('이미 좋아요를 누른 게시글입니다.');
+    }
+
+    await this.prisma.postLike.create({
+      data: {
+        postId,
+        userId,
+      },
+    });
+  }
+
+  async unlikePost(userId: number, postId: number) {
+    const post = await this.prisma.post.findUnique({
+      where: {
+        id: postId,
+        deletedAt: null,
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    if (!post) {
+      throw new NotFoundException('게시글을 찾을 수 없습니다.');
+    }
+
+    const postLike = await this.prisma.postLike.findFirst({
+      where: {
+        postId,
+        userId,
+        deletedAt: null,
+      },
+    });
+
+    if (!postLike) {
+      throw new NotFoundException('좋아요를 누른 게시글이 아닙니다.');
+    }
+
+    await this.prisma.postLike.updateMany({
+      where: {
+        postId,
+        userId,
       },
       data: {
         deletedAt: new Date(),

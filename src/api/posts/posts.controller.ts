@@ -29,6 +29,7 @@ import { JwtPayloadInfo, PageResponse } from 'src/common/interface';
 import { PostEntryResponseDto } from './dtos/post-entry-responst.dto';
 import { PostListResponseDto } from './dtos/posts-response.dto';
 import { Post as PostModel } from '@prisma/client';
+import { OnlyGetAccessTokenValueGuard } from '../auth/security/guards/only-get-access-token-value.guard';
 
 @Controller('posts')
 @ApiTags('Posts - 게시글')
@@ -50,6 +51,8 @@ export class PostsController {
   }
 
   @Get()
+  @UseGuards(OnlyGetAccessTokenValueGuard)
+  @ApiBearerAuth('access-token')
   @ApiOperation({
     summary: '게시글 목록 조회 API',
   })
@@ -75,12 +78,15 @@ export class PostsController {
     },
   })
   async getPosts(
+    @JwtUserPayload() jwtUser: JwtPayloadInfo,
     @Query() getPostsQuery: GetPostsQueryDto,
   ): Promise<PageResponse<PostEntryResponseDto[]>> {
-    return this.postsService.getPosts(getPostsQuery);
+    return this.postsService.getPosts(jwtUser.userId, getPostsQuery);
   }
 
   @Get('/:postId')
+  @UseGuards(OnlyGetAccessTokenValueGuard)
+  @ApiBearerAuth('access-token')
   @ApiOperation({
     summary: '게시글 상세조회 API',
   })
@@ -103,9 +109,10 @@ export class PostsController {
     },
   })
   async getPost(
+    @JwtUserPayload() jwtUser: JwtPayloadInfo,
     @Query('postId', new ParseIntPipe()) postId: number,
   ): Promise<PostEntryResponseDto> {
-    return this.postsService.getPost(postId);
+    return this.postsService.getPost(jwtUser.userId, postId);
   }
 
   @Delete('/:postId')
@@ -122,5 +129,37 @@ export class PostsController {
     @Param('postId', new ParseIntPipe()) postId: number,
   ) {
     return this.postsService.deletePost(user.userId, postId);
+  }
+
+  @Post('/:postId/like')
+  @UseGuards(AuthGuard('jwt-access'))
+  @ApiBearerAuth('access-token')
+  @ApiOperation({
+    summary: '게시글 좋아요 API',
+  })
+  @ApiOkResponse({ description: '게시글 좋아요 성공' })
+  @ApiNotFoundResponse({ description: '게시글 없음' })
+  @ApiForbiddenResponse({ description: '권한 없음' })
+  async likePost(
+    @JwtUserPayload() user: JwtPayloadInfo,
+    @Param('postId', new ParseIntPipe()) postId: number,
+  ) {
+    return this.postsService.likePost(user.userId, postId);
+  }
+
+  @Delete('/:postId/like')
+  @UseGuards(AuthGuard('jwt-access'))
+  @ApiBearerAuth('access-token')
+  @ApiOperation({
+    summary: '게시글 좋아요 취소 API',
+  })
+  @ApiOkResponse({ description: '게시글 좋아요 취소 성공' })
+  @ApiNotFoundResponse({ description: '게시글 없음' })
+  @ApiForbiddenResponse({ description: '권한 없음' })
+  async unlikePost(
+    @JwtUserPayload() user: JwtPayloadInfo,
+    @Param('postId', new ParseIntPipe()) postId: number,
+  ) {
+    return this.postsService.unlikePost(user.userId, postId);
   }
 }
