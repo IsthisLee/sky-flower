@@ -9,7 +9,7 @@ import { PrismaService } from 'src/shared/services/prisma.service';
 import { CreatePostDto } from './dtos/create-post.dto';
 import { GetPostsQueryDto } from './dtos/get-posts.dto';
 import { SortEnum } from 'src/common/constants/sort';
-import { Prisma } from '@prisma/client';
+import { Post, PostFileUsage, Prisma } from '@prisma/client';
 import dayjs from 'dayjs';
 import { PostEntryResponseDto } from './dtos/post-entry-responst.dto';
 import { PageResponse } from 'src/common/interface';
@@ -31,6 +31,7 @@ const postSelect = {
   postFiles: {
     where: { deletedAt: null, file: { deletedAt: null } },
     select: {
+      usage: true,
       file: { select: { filePath: true } },
     },
   },
@@ -44,9 +45,13 @@ export class PostsService {
     private readonly fileInfoSaveService: FileInfoSaveService,
   ) {}
 
-  async createPost(userId: number, createPostDto: CreatePostDto) {
+  async createPost(
+    userId: number,
+    createPostDto: CreatePostDto,
+  ): Promise<Post> {
     const {
       photoUrl,
+      markerPhotoUrl,
       latitude,
       longitude,
       address,
@@ -57,11 +62,10 @@ export class PostsService {
 
     const newPost = await this.prisma.$transaction(async (tx) => {
       // save file info
-      const savedFileInfo = await this.fileInfoSaveService.saveFile(
-        tx,
-        userId,
-        photoUrl,
-      );
+      const [savedFileInfo, savedMarkerFileInfo] = await Promise.all([
+        this.fileInfoSaveService.saveFile(tx, userId, photoUrl),
+        this.fileInfoSaveService.saveFile(tx, userId, markerPhotoUrl),
+      ]);
 
       // create post
       const newPost = await this.prisma.post.create({
@@ -77,11 +81,19 @@ export class PostsService {
       });
 
       // create post-file relation
-      await tx.postFile.create({
-        data: {
-          postId: newPost.id,
-          fileId: savedFileInfo.id,
-        },
+      await tx.postFile.createMany({
+        data: [
+          {
+            postId: newPost.id,
+            fileId: savedFileInfo.id,
+            usage: PostFileUsage.post_photo,
+          },
+          {
+            postId: newPost.id,
+            fileId: savedMarkerFileInfo.id,
+            usage: PostFileUsage.map_marker,
+          },
+        ],
       });
 
       return newPost;
@@ -103,7 +115,12 @@ export class PostsService {
       address: post.address,
       latitude: post.latitude,
       longitude: post.longitude,
-      photoUrl: post.postFiles[0]?.file.filePath,
+      photoUrl: post.postFiles.find(
+        (postFile) => postFile.usage === PostFileUsage.post_photo,
+      )?.file.filePath,
+      markerPhotoUrl: post.postFiles.find(
+        (postFile) => postFile.usage === PostFileUsage.map_marker,
+      )?.file.filePath,
       likeCount: post.postLikes.length,
       isLiked: post.postLikes.some(
         (postLike) => visitUserId === postLike.userId,

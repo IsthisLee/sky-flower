@@ -15,7 +15,7 @@ export function IsValidFilePath(
           const S3Region = process.env.AWS_S3_BUCKET_REGION;
           const S3Bucket = process.env.AWS_S3_BUCKET_NAME;
           const regex = new RegExp(
-            `^https:\/\/${S3Bucket}\.s3\.${S3Region}\.amazonaws\.com\/images\/[a-zA-Z0-9-_.!@#$%^&*()\\s]+\.[a-zA-Z0-9-]+\.[a-f0-9-]{36}\.[a-zA-Z0-9]+$`,
+            `^https:\/\/${S3Bucket}\.s3\.${S3Region}\.amazonaws\.com\/images\/[a-zA-Z0-9-_.\+!@#$%^&*()\\s]+\.[a-zA-Z0-9-]+\.[a-f0-9-]{36}\.[a-zA-Z0-9]+$`,
           );
           return regex.test(value);
         },

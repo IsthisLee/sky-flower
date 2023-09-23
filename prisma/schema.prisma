@@ -73,6 +73,7 @@ model PostFile {
   id        Int       @id @default(autoincrement())
   postId    Int       @map("post_id")
   fileId    Int       @map("file_id")
+  usage     PostFileUsage
   createdAt DateTime  @default(now()) @map("created_at") @db.Timestamp(0)
   deletedAt DateTime? @map("deleted_at") @db.Timestamp(0)
   updatedAt DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamp(0)
@@ -99,4 +100,9 @@ enum FileType {
   image
   video
   other
+}
+
+enum PostFileUsage {
+  post_photo
+  map_marker
 }

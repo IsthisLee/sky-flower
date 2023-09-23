@@ -13,6 +13,15 @@ export class CreatePostDto {
   photoUrl: string;
 
   @ApiProperty({
+    title: '게시글 지도 마커 사진 URL',
+    required: true,
+  })
+  @v.IsString()
+  @v.IsNotEmpty()
+  @IsValidFilePath()
+  markerPhotoUrl: string;
+
+  @ApiProperty({
     title: '위도',
     required: true,
   })

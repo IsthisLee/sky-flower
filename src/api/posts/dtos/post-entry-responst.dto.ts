@@ -56,6 +56,12 @@ export class PostEntryResponseDto {
   photoUrl: string;
 
   @ApiProperty({
+    title: '마커 사진 경로',
+    example: 'https://s3.image.url',
+  })
+  markerPhotoUrl: string;
+
+  @ApiProperty({
     title: '좋아요 수',
     example: 10,
   })

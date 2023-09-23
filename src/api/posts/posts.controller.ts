@@ -13,6 +13,7 @@ import {
 import { PostsService } from './posts.service';
 import {
   ApiBearerAuth,
+  ApiCreatedResponse,
   ApiExtraModels,
   ApiForbiddenResponse,
   ApiNotFoundResponse,
@@ -27,6 +28,7 @@ import { JwtUserPayload } from 'src/common/decorators/jwt-user.decorator';
 import { JwtPayloadInfo, PageResponse } from 'src/common/interface';
 import { PostEntryResponseDto } from './dtos/post-entry-responst.dto';
 import { PostListResponseDto } from './dtos/posts-response.dto';
+import { Post as PostModel } from '@prisma/client';
 
 @Controller('posts')
 @ApiTags('Posts - 게시글')
@@ -39,10 +41,11 @@ export class PostsController {
   @ApiOperation({
     summary: '게시글 생성 API',
   })
+  @ApiCreatedResponse({ description: '게시글 생성 성공' })
   async createPost(
     @JwtUserPayload() user: JwtPayloadInfo,
     @Body() createPostDto: CreatePostDto,
-  ) {
+  ): Promise<PostModel> {
     return this.postsService.createPost(user.userId, createPostDto);
   }
 
