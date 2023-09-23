@@ -37,7 +37,8 @@ export class GetPostsQueryDto {
 
   @ApiProperty({
     title: '사용자의 현재 위치 위도',
-    description: '정렬 기준이 거리순일 경우 필수',
+    description:
+      '좋아요/거리순 정렬 기준일 경우 입력, 정렬 기준이 거리순일 경우에는 필수',
     required: false,
   })
   @Transform(({ value }) => Number(value))
@@ -52,7 +53,8 @@ export class GetPostsQueryDto {
 
   @ApiProperty({
     title: '사용자의 현재 위치 경도',
-    description: '정렬 기준이 거리순일 경우 필수',
+    description:
+      '좋아요/거리순 정렬 기준일 경우 입력, 정렬 기준이 거리순일 경우에는 필수',
     required: false,
   })
   @Transform(({ value }) => Number(value))

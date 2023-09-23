@@ -208,15 +208,21 @@ export class PostsService {
             .toISOString()}' THEN 1 
                         ELSE NULL 
                     END
-                ) as todayLikeCount,
-                earth_distance(
+                ) as todayLikeCount
+                ${
+                  userLatitude && userLongitude
+                    ? `,earth_distance(
                 ll_to_earth(${userLatitude}, ${userLongitude}),
                 ll_to_earth("latitude", "longitude")
-                ) as distance
+                ) as distance`
+                    : ''
+                }
             FROM "Post"
             LEFT JOIN "PostLike" ON "Post".id = "PostLike".post_id
             GROUP BY "Post".id
-            ORDER BY todayLikeCount DESC, distance ASC, "Post".created_at DESC
+            ORDER BY todayLikeCount DESC, ${
+              userLatitude && userLongitude ? 'distance ASC, ' : ''
+            }"Post".created_at DESC
             LIMIT ${limit} OFFSET ${(page - 1) * limit}
           `;
           break;
