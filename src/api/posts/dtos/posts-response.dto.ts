@@ -5,7 +5,7 @@ import { PageAdditionalResponseDto } from 'src/common/dtos/pagination.dto';
 @ApiExtraModels(PostEntryResponseDto)
 export class PostListResponseDto extends PageAdditionalResponseDto {
   @ApiProperty({
-    description: 'List of items',
+    description: '게시글 목록',
     type: PostEntryResponseDto,
     isArray: true,
   })
