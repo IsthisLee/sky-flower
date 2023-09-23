@@ -9,6 +9,7 @@ import { UsersModule } from './api/users/users.module';
 import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
 import { HttpExceptionFilter } from './common/exceptions/http-exception.filter';
 import { S3Module } from './api/s3/s3.module';
+import { Postsodule } from './api/posts/posts.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { S3Module } from './api/s3/s3.module';
     S3Module,
     AuthModule,
     UsersModule,
+    Postsodule,
     SharedModule,
     HealthCheckerModule,
   ],

@@ -3,8 +3,14 @@ import { HttpModule } from '@nestjs/axios';
 import { PrismaService } from './services/prisma.service';
 import { RequestService } from './services/request.service';
 import { GeneratorService } from './services/generator.service';
+import { FileInfoSaveService } from './services/file-info-save.service';
 
-const providers = [PrismaService, RequestService, GeneratorService];
+const providers = [
+  PrismaService,
+  RequestService,
+  GeneratorService,
+  FileInfoSaveService,
+];
 
 @Global()
 @Module({

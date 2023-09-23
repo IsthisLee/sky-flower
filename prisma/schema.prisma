@@ -10,10 +10,10 @@ datasource db {
 model User {
   id             Int         @id @default(autoincrement())
   nickname       String      @db.VarChar(255)
-  profileImageId Int?        @unique @map("profile_image_id")
   createdAt      DateTime    @default(now()) @map("created_at") @db.Timestamp(0)
   deletedAt      DateTime?   @map("deleted_at") @db.Timestamp(0)
   updatedAt      DateTime    @updatedAt @map("updated_at") @db.Timestamp(0)
+  profileImageId Int?        @unique @map("profile_image_id")
   files          File[]      @relation("UserToFiles")
   posts          Post[]
   postLikes      PostLike[]
@@ -37,13 +37,13 @@ model UserOauth {
 model File {
   id               Int        @id @default(autoincrement())
   userId           Int        @map("user_id")
-  originalFileName String     @map("original_file_name")
-  filePath         String     @map("file_path")
-  fileType         FileType   @map("file_type")
-  fileExtension    String     @map("file_extension")
   createdAt        DateTime   @default(now()) @map("created_at") @db.Timestamp(0)
   updatedAt        DateTime   @updatedAt @map("updated_at") @db.Timestamp(0)
   deletedAt        DateTime?  @map("deleted_at") @db.Timestamp(0)
+  fileExtension    String     @map("file_extension")
+  filePath         String     @unique @map("file_path")
+  fileType         FileType   @map("file_type")
+  originalFileName String     @map("original_file_name")
   user             User       @relation("UserToFiles", fields: [userId], references: [id])
   postFiles        PostFile[]
   profileOwner     User?      @relation("UserToProfileImage")
@@ -52,14 +52,15 @@ model File {
 model Post {
   id        Int        @id @default(autoincrement())
   userId    Int        @map("user_id")
-  title     String
-  content   String
-  latitude  Float?
-  longitude Float?
+  title     String?
+  content   String?
+  latitude  Float
+  longitude Float
   address   String?
   city      String?
   district  String?
-  viewCount Int        @map("view_count")
+  town      String?
+  viewCount Int        @default(0) @map("view_count")
   createdAt DateTime   @default(now()) @map("created_at") @db.Timestamp(0)
   updatedAt DateTime   @updatedAt @map("updated_at") @db.Timestamp(0)
   deletedAt DateTime?  @map("deleted_at") @db.Timestamp(0)

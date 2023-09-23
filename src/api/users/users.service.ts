@@ -50,16 +50,13 @@ export class UsersService {
       // create user
       const newUser = await tx.user.create({
         data: {
-          nickname: nickname,
-        },
-      });
-
-      // create user oauth
-      await tx.userOauth.create({
-        data: {
-          oauthId: oauthId,
-          provider,
-          userId: newUser.id,
+          nickname,
+          userOauths: {
+            create: {
+              oauthId,
+              provider,
+            },
+          },
         },
       });
 
@@ -79,6 +76,7 @@ export class UsersService {
           filePath: profileImageUrl,
         },
       });
+
       await tx.user.update({
         where: { id: newUser.id },
         data: { profileImageId: createdFile.id },
@@ -132,7 +130,7 @@ export class UsersService {
     const { originalName, fileType, ext } =
       this.generatorService.fileInfoByFilePath(profileImageUrl);
 
-    const updatedUser = await this.prismaService.$transaction(async (tx) => {
+    await this.prismaService.$transaction(async (tx) => {
       const createdFile = await tx.file.create({
         data: {
           userId: userId,
@@ -146,11 +144,10 @@ export class UsersService {
       return await tx.user.update({
         where: { id: userId },
         data: { profileImageId: createdFile.id },
-        include: { profileImage: { select: { filePath: true } } },
       });
     });
 
-    return updatedUser.profileImage.filePath;
+    return profileImageUrl;
   }
 
   async deleteAccount(userId: number) {
@@ -164,7 +161,15 @@ export class UsersService {
 
     await this.prismaService.user.update({
       where: { id: userId },
-      data: { deletedAt: new Date() },
+      data: {
+        deletedAt: new Date(),
+        userOauths: {
+          updateMany: {
+            where: { userId: userId },
+            data: { deletedAt: new Date() },
+          },
+        },
+      },
     });
   }
 }
