@@ -1,5 +1,6 @@
 import { FileInfoSaveService } from '../../shared/services/file-info-save.service';
 import {
+  BadRequestException,
   ForbiddenException,
   Injectable,
   NotFoundException,
@@ -162,70 +163,78 @@ export class PostsService {
   ): Promise<PageResponse<PostEntryResponseDto[]>> {
     const { page, limit, sort, userLatitude, userLongitude } = getPostsQuery;
 
-    if (sort === SortEnum.DISTANCE) {
-      const query = `SELECT *, earth_distance(
-        ll_to_earth(CAST(${userLatitude} as float), CAST(${userLongitude} as float)),
-        ll_to_earth(CAST("latitude" as float), CAST("longitude" as float))
-        ) as distance
-        FROM "skyflower"."Post"
-        ORDER BY distance ASC
-        LIMIT ${limit} OFFSET ${(page - 1) * limit}
-      `;
-      const posts: PostType[] = await this.prisma.$queryRawUnsafe(query);
+    if (sort === SortEnum.DISTANCE || sort === SortEnum.LIKE) {
+      let query: string;
 
-      return await this.getPostsResponse({
-        posts,
-        visitUserId: 0,
-        page,
-        limit,
-      });
-    } else if (sort === SortEnum.LIKE) {
-      const now = dayjs();
-      const today4AM = dayjs().startOf('day').add(4, 'hour');
+      switch (sort) {
+        case SortEnum.DISTANCE:
+          // 정렬 기준: 거리순 -> 최신순
+          query = `SELECT id, earth_distance(
+            ll_to_earth(${userLatitude}, ${userLongitude}),
+            ll_to_earth("latitude", "longitude")
+            ) as distance
+            FROM "skyflower"."Post"
+            ORDER BY distance ASC, "Post".created_at DESC
+            LIMIT ${limit} OFFSET ${(page - 1) * limit}
+          `;
+          break;
 
-      let startDate: dayjs.Dayjs;
-      let endDate: dayjs.Dayjs;
+        case SortEnum.LIKE:
+          // 매일 04시 이후부터 당일 누적 좋아요 개수 기준(04시 이전은 전날 누적 좋아요 개수 기준)
+          // 정렬 기준: 좋아요 -> 최신순 -> 거리순
+          const now = dayjs();
+          const today4AM = dayjs().startOf('day').add(4, 'hour');
 
-      // 오늘 4시 이전에 조회하면 어제 좋아요 누적된 순위를 보여줘야 함.
-      // 오늘 4시 이후에 조회하면 오늘 좋아요 누적된 순위를 보여줘야 함.
-      if (now.isAfter(today4AM)) {
-        startDate = dayjs().startOf('day');
-        endDate = dayjs().endOf('day');
-      } else {
-        startDate = dayjs().subtract(1, 'day').startOf('day');
-        endDate = dayjs().subtract(1, 'day').endOf('day');
-      }
+          let startDate: dayjs.Dayjs;
+          let endDate: dayjs.Dayjs;
 
-      const query = `
+          if (now.isAfter(today4AM)) {
+            startDate = dayjs().startOf('day');
+            endDate = dayjs().endOf('day');
+          } else {
+            startDate = dayjs().subtract(1, 'day').startOf('day');
+            endDate = dayjs().subtract(1, 'day').endOf('day');
+          }
+
+          query = `
             SELECT 
-                "Post"."id", 
+                id, 
                 COUNT(
                     CASE 
-                        WHEN "PostLike"."created_at" BETWEEN '${startDate
+                        WHEN "PostLike".created_at BETWEEN '${startDate
                           .toDate()
                           .toISOString()}' AND '${endDate
-        .toDate()
-        .toISOString()}' THEN 1 
+            .toDate()
+            .toISOString()}' THEN 1 
                         ELSE NULL 
                     END
-                ) as "todayLikeCount"
+                ) as todayLikeCount,
+                earth_distance(
+                ll_to_earth(${userLatitude}, ${userLongitude}),
+                ll_to_earth("latitude", "longitude")
+                ) as distance
             FROM "Post"
-            LEFT JOIN "PostLike" ON "Post"."id" = "PostLike"."post_id"
-            GROUP BY "Post"."id"
-            ORDER BY "todayLikeCount" DESC, "Post"."created_at" DESC
+            LEFT JOIN "PostLike" ON "Post".id = "PostLike".post_id
+            GROUP BY "Post".id
+            ORDER BY todayLikeCount DESC, distance ASC, "Post".created_at DESC
             LIMIT ${limit} OFFSET ${(page - 1) * limit}
-            `;
-      const likeRankPosts: { id: number; todayLikeCount: bigint }[] =
-        await this.prisma.$queryRawUnsafe(query);
+          `;
+          break;
+      }
+
+      const postIdList: (
+        | { id: number; distance: number }
+        | { id: number; todayLikeCount: bigint }
+      )[] = await this.prisma.$queryRawUnsafe(query);
 
       const posts = await this.prisma.post.findMany({
         where: {
-          id: { in: likeRankPosts.map((likeRankPost) => likeRankPost.id) },
+          id: { in: postIdList.map((likeRankPost) => likeRankPost.id) },
         },
         select: postSelect,
       });
 
-      const reOrderedPost = likeRankPosts
+      const reOrderedPost = postIdList
         .map((likeRankPost) => {
           return posts.find((post) => post.id === likeRankPost.id);
         })
@@ -246,6 +255,9 @@ export class PostsService {
         case SortEnum.DESC:
           orderBy = { createdAt: 'desc' };
           break;
+
+        default:
+          throw new BadRequestException('잘못된 정렬 기준입니다.');
       }
 
       const posts = await this.prisma.post.findMany({
