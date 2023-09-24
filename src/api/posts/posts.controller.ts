@@ -137,7 +137,7 @@ export class PostsController {
   @ApiOperation({
     summary: '게시글 좋아요 API',
   })
-  @ApiOkResponse({ description: '게시글 좋아요 성공' })
+  @ApiCreatedResponse({ description: '게시글 좋아요 성공' })
   @ApiNotFoundResponse({ description: '게시글 없음' })
   @ApiForbiddenResponse({ description: '권한 없음' })
   async likePost(

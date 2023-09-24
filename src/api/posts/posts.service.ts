@@ -354,6 +354,26 @@ export class PostsService {
       },
       data: {
         deletedAt: new Date(),
+        postFiles: {
+          updateMany: {
+            where: {
+              deletedAt: null,
+            },
+            data: {
+              deletedAt: new Date(),
+            },
+          },
+        },
+        postLikes: {
+          updateMany: {
+            where: {
+              deletedAt: null,
+            },
+            data: {
+              deletedAt: new Date(),
+            },
+          },
+        },
       },
     });
   }
